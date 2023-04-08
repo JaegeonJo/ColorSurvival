@@ -3,8 +3,8 @@ name: UnityTestRunner 😎
 on: [pull_request]
 
 jobs:
-  build:
-    name: Build my project ✨
+  test:
+    name: Test my project ✨
     runs-on: ubuntu-latest
     steps:
       # Checkout
