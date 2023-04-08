@@ -1,64 +1,46 @@
-name: Run Unity Testrunner 
+name: UnityTestRunner 😎
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
-on:
-   pull_request:
-      types: [ opened, reopend ]
+on: [pull_request]
 
-env:
-  UNITY_LICENSE: $
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  runUnityTestrunner:
-    
-    # The type of runner that the job will run on
+  build:
+    name: Build my project ✨
     runs-on: ubuntu-latest
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        # Unity project가 Root가 아니면 경로 입력
-        projectPath:
-          - ./
-        # 사용중인 Unity version
-        unityVersion:
-          - 2021.3.20f1
-        testMode:
-          - playmode
-    
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-       
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-      with:
-        lfs: true
-
-          
-      # Caching library folder    
-      - name: Cache Library Folder
-        uses: actions/cache@v1.1.0
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
-          path: $/Library
-          key: Library-$
+          lfs: true
+
+      # Cache
+      - uses: actions/cache@v2
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
             Library-
-            
-      # Run Unity Testrunner
-      - name : Run Unity Testrunner
-        uses: webbertakken/unity-test-runner@v1.4
-        id: tests
+
+      # Test
+      - name: Run tests
+        uses: game-ci/unity-test-runner@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          projectPath: $
-          unityVersion: $
-          testMode: $
-          artifactsPath: $-artifacts
-      
-      # Upload result
-      - name: Upload result  
-        uses: actions/upload-artifact@v1
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          name: Test results for $
-          path: $ 
+          targetPlatform: StandaloneWindows64 
+
+      # Output
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Build
+          path: build
